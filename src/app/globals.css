@@ -1,0 +1,144 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    font-family: 'Nunito Sans', Calibri, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    color: #1A1A2E;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar        { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track  { background: #f1f1f1; }
+  ::-webkit-scrollbar-thumb  { background: #c5cae9; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #9fa8da; }
+}
+
+@layer components {
+  /* ── Badge ─────────────────────────────────────────── */
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold;
+  }
+  .badge-status-NOT_STARTED { @apply bg-gray-100 text-gray-700; }
+  .badge-status-PLANNING    { @apply bg-blue-100 text-blue-700; }
+  .badge-status-IN_PROGRESS { @apply bg-navy-50 text-navy; }
+  .badge-status-COMPLETE    { @apply bg-green-100 text-green-700; }
+  .badge-status-BLOCKED     { @apply bg-red-100 text-red-700; }
+  .badge-status-ON_HOLD     { @apply bg-orange-100 text-orange-700; }
+  .badge-status-REVIEW      { @apply bg-yellow-100 text-yellow-700; }
+
+  .badge-pri-LOW      { @apply bg-teal-50 text-teal-700; }
+  .badge-pri-MEDIUM   { @apply bg-yellow-50 text-yellow-700; }
+  .badge-pri-HIGH     { @apply bg-orange-50 text-orange-700; }
+  .badge-pri-CRITICAL { @apply bg-red-50 text-red-700; }
+
+  /* ── Form elements ─────────────────────────────────── */
+  .form-label {
+    @apply block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1;
+  }
+  .form-input {
+    @apply w-full border border-gray-300 rounded-lg px-3 py-2 text-sm
+           focus:outline-none focus:ring-2 focus:ring-navy focus:border-transparent
+           placeholder-gray-400 transition;
+  }
+  .form-select {
+    @apply w-full border border-gray-300 rounded-lg px-3 py-2 text-sm
+           focus:outline-none focus:ring-2 focus:ring-navy focus:border-transparent
+           bg-white transition cursor-pointer;
+  }
+  .form-textarea {
+    @apply w-full border border-gray-300 rounded-lg px-3 py-2 text-sm
+           focus:outline-none focus:ring-2 focus:ring-navy focus:border-transparent
+           resize-none placeholder-gray-400 transition;
+  }
+  .form-error {
+    @apply text-red-600 text-xs mt-1;
+  }
+
+  /* ── Buttons ───────────────────────────────────────── */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg
+           text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-offset-1
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-navy text-white hover:bg-navy-light focus:ring-navy;
+  }
+  .btn-orange {
+    @apply btn bg-brand-orange text-white hover:bg-brand-orange-lt focus:ring-brand-orange;
+  }
+  .btn-outline {
+    @apply btn border border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-300;
+  }
+  .btn-danger {
+    @apply btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
+  }
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs;
+  }
+  .btn-ghost {
+    @apply btn text-gray-600 hover:bg-gray-100 focus:ring-gray-300;
+  }
+
+  /* ── Card ──────────────────────────────────────────── */
+  .card {
+    @apply bg-white rounded-xl border border-gray-200 shadow-card;
+  }
+
+  /* ── Table ─────────────────────────────────────────── */
+  .data-table { @apply w-full border-collapse; }
+  .data-table th {
+    @apply bg-navy text-white text-xs font-semibold uppercase tracking-wide
+           px-3 py-3 text-left cursor-pointer select-none whitespace-nowrap;
+  }
+  .data-table th:hover { @apply bg-navy-light; }
+  .data-table td       { @apply px-3 py-2.5 border-b border-gray-100 text-sm align-middle; }
+  .data-table tr:last-child td { @apply border-b-0; }
+  .data-table tr:hover td      { @apply bg-navy-50; }
+
+  /* ── Pill tag ──────────────────────────────────────── */
+  .tag {
+    @apply inline-block bg-navy-50 text-navy text-xs font-semibold
+           px-1.5 py-0.5 rounded mr-1;
+  }
+
+  /* ── Progress bar ──────────────────────────────────── */
+  .progress-bar { @apply w-full h-1.5 bg-gray-200 rounded-full overflow-hidden; }
+  .progress-fill { @apply h-full rounded-full transition-all duration-500; }
+
+  /* ── Modal overlay ─────────────────────────────────── */
+  .modal-overlay {
+    @apply fixed inset-0 z-50 flex items-start justify-center
+           bg-black/40 overflow-y-auto py-8 px-4;
+  }
+  .modal-box {
+    @apply bg-white rounded-2xl shadow-modal w-full mx-auto my-auto;
+  }
+  .modal-header {
+    @apply flex items-center justify-between px-6 py-4
+           border-b border-gray-200;
+  }
+  .modal-title { @apply text-base font-bold text-navy; }
+  .modal-body  { @apply px-6 py-5; }
+  .modal-footer {
+    @apply flex items-center justify-end gap-3 px-6 py-4
+           border-t border-gray-200 bg-gray-50 rounded-b-2xl;
+  }
+}
+
+/* Transition for modals */
+.modal-enter  { animation: fadeIn 0.15s ease; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+/* Row highlight states */
+tr.row-overdue td { background: #fff8f8 !important; }
+tr.row-overdue td:first-child { border-left: 3px solid #dc2626; }
+tr.row-blocked td { background: #fff5f5 !important; }
+tr.row-blocked td:first-child { border-left: 3px solid #ef4444; }

@@ -1,0 +1,56 @@
+version: '3.9'
+
+# ─────────────────────────────────────────────────────────────
+# Prabisha PM — Docker Compose
+# Production deployment: docker-compose up -d
+# ─────────────────────────────────────────────────────────────
+
+services:
+
+  # ── PostgreSQL Database ──────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: prabisha_pm_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       prabisha_pm
+      POSTGRES_USER:     prabisha_pm
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-PrabishaDB2026!}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test:     ["CMD-SHELL", "pg_isready -U prabisha_pm -d prabisha_pm"]
+      interval: 10s
+      timeout:  5s
+      retries:  5
+
+  # ── Next.js App ──────────────────────────────────────────
+  app:
+    build:
+      context:    .
+      dockerfile: Dockerfile
+    container_name: prabisha_pm_app
+    restart:      unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL:           postgresql://prabisha_pm:${DB_PASSWORD:-PrabishaDB2026!}@db:5432/prabisha_pm
+      JWT_SECRET:             ${JWT_SECRET:-CHANGE_THIS_IN_PRODUCTION_TO_A_LONG_RANDOM_STRING}
+      JWT_EXPIRY:             7d
+      NEXT_PUBLIC_APP_URL:    ${APP_URL:-http://localhost:3000}
+      ALLOWED_ORIGIN:         ${APP_URL:-http://localhost:3000}
+      NODE_ENV:               production
+    ports:
+      - "${PORT:-3000}:3000"
+    healthcheck:
+      test:     ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/auth/login"]
+      interval: 30s
+      timeout:  10s
+      retries:  3
+
+volumes:
+  pgdata:
+    driver: local

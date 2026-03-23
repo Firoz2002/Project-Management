@@ -1,0 +1,181 @@
+// ─────────────────────────────────────────────────────────────
+// Prabisha PM — Prisma Schema
+// Database: PostgreSQL
+// ORM: Prisma 5
+// ─────────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────
+
+enum ProjectStatus {
+  NOT_STARTED
+  PLANNING
+  IN_PROGRESS
+  COMPLETE
+  BLOCKED
+  ON_HOLD
+}
+
+enum TaskStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  REVIEW
+  COMPLETE
+  BLOCKED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum ProjectCategory {
+  PRODUCT_DEVELOPMENT
+  MARKETING
+  OPERATIONS
+  ENGINEERING
+  CONSULTING
+  DESIGN
+  RESEARCH
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  DEVELOPER
+  DESIGNER
+  CONTENT
+  MARKETING
+  CONSULTANT
+}
+
+// ─── Models ──────────────────────────────────────────────────
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole @default(DEVELOPER)
+  initials  String   @db.VarChar(4)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  ownedProjects Project[]  @relation("ProjectOwner")
+  tasks         Task[]
+  timeLogs      TimeLog[]
+  comments      Comment[]
+
+  @@map("users")
+}
+
+model Project {
+  id            String          @id
+  name          String
+  category      ProjectCategory
+  status        ProjectStatus   @default(NOT_STARTED)
+  priority      Priority        @default(MEDIUM)
+  ownerId       String
+  startDate     DateTime        @db.Date
+  dueDate       DateTime        @db.Date
+  completionPct Int             @default(0) @db.SmallInt
+  description   String?         @db.Text
+  riskLevel     RiskLevel       @default(MEDIUM)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  // Relations
+  owner User   @relation("ProjectOwner", fields: [ownerId], references: [id])
+  tasks Task[]
+
+  @@map("projects")
+}
+
+model Task {
+  id           String     @id
+  projectId    String
+  title        String
+  assigneeId   String
+  estimatedHrs Float      @default(0) @db.Real
+  actualHrs    Float      @default(0) @db.Real
+  status       TaskStatus @default(NOT_STARTED)
+  priority     Priority   @default(MEDIUM)
+  dueDate      DateTime   @db.Date
+  notes        String?    @db.Text
+  tags         String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  project  Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignee User    @relation(fields: [assigneeId], references: [id])
+
+  // Task dependencies (many-to-many self-relation via junction table)
+  dependsOnTasks  TaskDependency[] @relation("DependentTask")
+  requiredByTasks TaskDependency[] @relation("DependsOnTask")
+
+  timeLogs TimeLog[]
+  comments Comment[]
+
+  @@map("tasks")
+}
+
+// Junction table for task dependencies
+model TaskDependency {
+  dependentTaskId String
+  dependsOnTaskId String
+
+  dependentTask Task @relation("DependentTask", fields: [dependentTaskId], references: [id], onDelete: Cascade)
+  dependsOnTask Task @relation("DependsOnTask", fields: [dependsOnTaskId], references: [id], onDelete: Cascade)
+
+  @@id([dependentTaskId, dependsOnTaskId])
+  @@map("task_dependencies")
+}
+
+model TimeLog {
+  id          String   @id @default(cuid())
+  taskId      String
+  userId      String
+  hours       Float    @db.Real
+  date        DateTime @db.Date
+  description String?  @db.Text
+  createdAt   DateTime @default(now())
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("time_logs")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  taskId    String
+  userId    String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("comments")
+}
