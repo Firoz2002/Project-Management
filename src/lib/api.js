@@ -55,7 +55,7 @@ async function apiFetch(url, options = {}) {
   // Session expired → redirect to login
   if (res.status === 401) {
     clearToken()
-    if (typeof window !== 'undefined') window.location.href = '/login'
+    //if (typeof window !== 'undefined') window.location.href = '/login'
     throw new Error('Session expired. Please log in again.')
   }
 
