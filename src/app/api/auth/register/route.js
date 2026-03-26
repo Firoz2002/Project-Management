@@ -1,54 +1,65 @@
-// app/api/auth/register/route.js
 import { NextResponse } from 'next/server';
-import { hashPassword, signToken } from '@/lib/auth'; // Adjust path to your auth.js
-// import { db } from '@/lib/db'; // Import your database client here
+import { prisma } from '@/lib/prisma'; // Use your actual prisma client
+import { hashPassword, signToken } from '@/lib/auth';
 
 export async function POST(request) {
   try {
-    const { name, email, password } = await request.json();
+    const { name, email, password, role } = await request.json();
 
     // 1. Basic Validation
     if (!name || !email || !password) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
     }
 
-    /* 2. Check if user exists 
-    const existingUser = await db.user.findUnique({ where: { email } });
-    if (existingUser) {
-      return NextResponse.json({ error: 'Email already registered' }, { status: 400 });
-    }
-    */
+    const normalizedEmail = email.toLowerCase().trim();
 
-    // 3. Hash the password using your auth.js utility
+    // 2. Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    });
+
+    if (existingUser) {
+      return NextResponse.json(
+        { error: 'Email already registered' },
+        { status: 400 }
+      );
+    }
+
+    // 3. Hash the password
     const hashedPassword = await hashPassword(password);
 
-    /* 4. Save to Database
-    const user = await db.user.create({
-      data: { name, email, password: hashedPassword }
+    // 4. Save to Database (Actually creating the user now)
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email: normalizedEmail,
+        password: hashedPassword,
+        isActive: true, // Matching the 'isActive' check in your login logic
+        role: role,
+        initials: name.split(' ').map(n => n[0]).join('').toUpperCase(), // Optional: generate initials
+      },
     });
-    */
-    
-    // Mock user for demonstration if DB isn't set up yet
-    const user = { id: '123', name, email };
 
     // 5. Generate JWT Token
     const token = await signToken({ 
-      userId: user.id, 
-      email: user.email 
+      sub: user.id, 
+      email: user.email,
+      role: user.role 
     });
 
-    // 6. Return response + Set Cookie (Optional but recommended for Middleware)
+    // 6. Return response + Set Cookie
+    const { password: _pw, ...safeUser } = user;
     const response = NextResponse.json({ 
       success: true, 
-      user: { name: user.name, email: user.email },
+      user: safeUser,
       token 
     });
 
     response.cookies.set('pm_token', token, {
-      httpOnly: true,
+      httpOnly: false, // Set to false if your frontend needs to read it, matching your login setup
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 7, 
       path: '/',
     });
 

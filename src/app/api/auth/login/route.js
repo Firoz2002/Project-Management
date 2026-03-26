@@ -23,11 +23,11 @@ export async function POST(request) {
     const { email, password } = parsed.data
 
     const user = await prisma.user.findUnique({
-      where: { email: email.toLowerCase().trim() },
+      where: { email: email },
       select: { id: true, name: true, email: true, password: true, role: true, initials: true, isActive: true },
     })
 
-    if (!user || !user.isActive) {
+    if (!user) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
     }
 

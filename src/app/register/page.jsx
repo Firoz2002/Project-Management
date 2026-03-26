@@ -5,12 +5,24 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { setToken, setUser } from '@/lib/api'
 
+// Define the roles to match your Enum
+const USER_ROLES = [
+  'ADMIN',
+  'MANAGER',
+  'DEVELOPER',
+  'DESIGNER',
+  'CONTENT',
+  'MARKETING',
+  'CONSULTANT'
+]
+
 export default function RegisterPage() {
   const router = useRouter()
   
   // Form State
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [role, setRole] = useState('DEVELOPER') // Default role
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   
@@ -23,7 +35,7 @@ export default function RegisterPage() {
     setError('')
 
     // Basic Validation
-    if (!name.trim() || !email.trim() || !password) {
+    if (!name.trim() || !email.trim() || !password || !role) {
       setError('All fields are required')
       return
     }
@@ -46,7 +58,8 @@ export default function RegisterPage() {
         body: JSON.stringify({ 
           name: name.trim(),
           email: email.trim().toLowerCase(), 
-          password 
+          password,
+          role // Sending the selected role
         }),
       })
 
@@ -63,6 +76,7 @@ export default function RegisterPage() {
       router.push('/')
       
     } catch (err) {
+      console.error('Registration error:', err)
       setError('Network error. Please check your connection.')
     } finally {
       setLoading(false)
@@ -71,7 +85,6 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-navy flex items-center justify-center px-4">
-      {/* Background pattern */}
       <div className="absolute inset-0 opacity-5"
         style={{ backgroundImage: 'radial-gradient(circle at 25% 25%, white 1px, transparent 1px), radial-gradient(circle at 75% 75%, white 1px, transparent 1px)', backgroundSize: '48px 48px' }}
       />
@@ -115,6 +128,23 @@ export default function RegisterPage() {
                 onChange={e => { setEmail(e.target.value); setError('') }}
                 placeholder="you@prabisha.com"
               />
+            </div>
+
+            {/* Role Selection Dropdown */}
+            <div>
+              <label className="form-label">User Role</label>
+              <select 
+                className="form-input appearance-none bg-no-repeat bg-[right_0.5rem_center]" 
+                value={role}
+                onChange={e => setRole(e.target.value)}
+                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundSize: '1.25rem' }}
+              >
+                {USER_ROLES.map(r => (
+                  <option key={r} value={r}>
+                    {r.charAt(0) + r.slice(1).toLowerCase()}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
